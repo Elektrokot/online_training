@@ -10,9 +10,13 @@ python = "^3.13"
 django = "^6.0.1"
 djangorestframework = "^3.16.1"
 pillow = "^12.1.0"
-psycopg2 = "^2.9.11"
-dotenv = "^0.9.9"
-psycopg2-binary = "^2.9.11"
+psycopg = "^3.3.2"
+environs = "^14.5.0"
+isort = "^7.0.0"
+flake8 = "^7.3.0"
+black = "^26.1.0"
+mypy = "^1.19.1"
+django-filter = "^25.2"
 
 
 [build-system]
