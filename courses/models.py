@@ -1,7 +1,5 @@
 from django.db import models
 
-from users.models import User
-
 
 class Course(models.Model):
     title = models.CharField(max_length=200, verbose_name="Название курса")
@@ -10,7 +8,7 @@ class Course(models.Model):
     )
     description = models.TextField(verbose_name="Описание курса")
     owner = models.ForeignKey(
-        User,
+        "users.User",
         on_delete=models.CASCADE,
         related_name="courses",
         verbose_name="Владелец курса",
@@ -35,7 +33,7 @@ class Lesson(models.Model):
         Course, on_delete=models.CASCADE, related_name="lessons", verbose_name="Курс"
     )
     owner = models.ForeignKey(
-        User,
+        "users.User",
         on_delete=models.CASCADE,
         related_name="lessons",
         verbose_name="Владелец урока",
