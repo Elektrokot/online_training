@@ -12,9 +12,15 @@ class LessonSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class LessonMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = ["id", "title", "description", "video_url"]
+
+
 class CourseSerializer(serializers.ModelSerializer):
     lessons_count = SerializerMethodField()
-    lessons = LessonSerializer(many=True, read_only=True)
+    lessons = LessonMiniSerializer(many=True, read_only=True)
 
     class Meta:
         model = Course

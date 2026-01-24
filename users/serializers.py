@@ -10,7 +10,7 @@ class PaymentSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserPrivateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     payments = PaymentSerializer(many=True, read_only=True)
 
@@ -27,3 +27,10 @@ class UserSerializer(serializers.ModelSerializer):
         if "password" in validated_data:
             validated_data["password"] = make_password(validated_data["password"])
         return super().update(instance, validated_data)
+
+
+class UserPublicSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ["id", "email", "phone", "city", "avatar"]
