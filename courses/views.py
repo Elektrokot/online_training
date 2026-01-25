@@ -15,9 +15,14 @@ from .serializers import CourseSerializer, LessonSerializer, PaymentSerializer
 
 
 class CourseViewSet(viewsets.ModelViewSet):
-    queryset = Course.objects.all()
     serializer_class = CourseSerializer
     pagination_class = CoursePagination  # Добавляем пагинацию
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.groups.filter(name="Модераторы").exists():
+            return Course.objects.all()
+        return Course.objects.filter(owner=user)
 
     def get_permissions(self):
         if self.action in ["create"]:
@@ -43,10 +48,15 @@ class LessonCreateAPIView(generics.CreateAPIView):
 
 
 class LessonListAPIView(generics.ListAPIView):
-    queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     permission_classes = [IsAuthenticated, IsModeratorOrReadOnly]
     pagination_class = LessonPagination  # Добавляем пагинацию
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.groups.filter(name="Модераторы").exists():
+            return Lesson.objects.all()
+        return Lesson.objects.filter(owner=user)
 
 
 class LessonRetrieveAPIView(generics.RetrieveAPIView):
@@ -75,13 +85,11 @@ class PaymentListView(generics.ListAPIView):
     ordering = ["-payment_date"]
 
 
-
 class SubscriptionToggleView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request, course_id):
         user = request.user
-        course_id = request.data.get("course_id")
         course = get_object_or_404(Course, id=course_id)
 
         # Ищем подписку

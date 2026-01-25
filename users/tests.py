@@ -32,18 +32,18 @@ class UserTestCase(APITestCase):
         )
 
     def test_register_user(self):
-        """ Тестирование регистрации пользователя """
+        """Тестирование регистрации пользователя"""
         data = {
-            'email': 'newuser@example.com',
-            'password': 'newpass123',
-            'phone': '+79001113344',
-            'city': 'Новосибирск'
+            "email": "newuser@example.com",
+            "password": "newpass123",
+            "phone": "+79001113344",
+            "city": "Новосибирск",
         }
-        response = self.client.post('/register/', data=data)
+        response = self.client.post("/register/", data=data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn('access', response.json())
-        self.assertIn('refresh', response.json())
-        self.assertTrue(User.objects.filter(email='newuser@example.com').exists())
+        self.assertIn("access", response.json())
+        self.assertIn("refresh", response.json())
+        self.assertTrue(User.objects.filter(email="newuser@example.com").exists())
 
     def test_login_user(self):
         """Тестирование входа пользователя"""
@@ -102,34 +102,32 @@ class PaymentTestCase(APITestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            email='user@example.com',
-            password='password123',
-            phone='+79001234567',
-            city='Москва'
+            email="user@example.com",
+            password="password123",
+            phone="+79001234567",
+            city="Москва",
         )
         self.course = Course.objects.create(
-            title='Python Basics',
-            description='...',
-            owner=self.user
+            title="Python Basics", description="...", owner=self.user
         )
         self.lesson = Lesson.objects.create(
-            title='Variables',
-            description='...',
-            video_url='https://youtube.com/watch?v=test',
+            title="Variables",
+            description="...",
+            video_url="https://youtube.com/watch?v=test",
             course=self.course,
-            owner=self.user
+            owner=self.user,
         )
 
     def test_filter_payments_by_course(self):
-        """ Тестирование фильтрации платежей по курсу """
+        """Тестирование фильтрации платежей по курсу"""
         self.client.force_authenticate(user=self.user)
         Payment.objects.create(
             user=self.user,
             paid_course=self.course,
             amount=1000.00,
-            payment_method='transfer'
+            payment_method="transfer",
         )
-        response = self.client.get(f'/payments/?paid_course={self.course.id}')
+        response = self.client.get(f"/payments/?paid_course={self.course.id}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Проверяем, что возвращается список (без пагинации)
         data = response.json()
@@ -137,22 +135,22 @@ class PaymentTestCase(APITestCase):
         self.assertEqual(len(data), 1)  # Один платеж
 
     def test_order_payments_by_date(self):
-        """ Тестирование сортировки платежей по дате """
+        """Тестирование сортировки платежей по дате"""
         self.client.force_authenticate(user=self.user)
         p1 = Payment.objects.create(
             user=self.user,
             paid_course=self.course,
             amount=1000.00,
-            payment_method='transfer'
+            payment_method="transfer",
         )
         p2 = Payment.objects.create(
             user=self.user,
             paid_lesson=self.lesson,
             amount=500.00,
-            payment_method='cash'
+            payment_method="cash",
         )
-        response = self.client.get('/payments/?ordering=payment_date')
+        response = self.client.get("/payments/?ordering=payment_date")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertIsInstance(data, list)
-        self.assertLessEqual(data[0]['payment_date'], data[1]['payment_date'])
+        self.assertLessEqual(data[0]["payment_date"], data[1]["payment_date"])

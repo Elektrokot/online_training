@@ -1,5 +1,4 @@
-import re
-
+from urllib.parse import urlparse
 from rest_framework.serializers import ValidationError
 
 
@@ -13,6 +12,7 @@ class YouTubeLinkValidator:
 
         if url:
             # Проверяем, что ссылка начинается с YouTube
-            pattern = r"^https?://(www\.)?youtube\.com/watch\?v=|^https?://youtu\.be/"
-            if not re.match(pattern, url):
+            parsed_url = urlparse(url)
+            domain = parsed_url.netloc.lower()
+            if domain not in ["www.youtube.com", "youtube.com", "youtu.be"]:
                 raise ValidationError("Ссылка может вести только на YouTube.")

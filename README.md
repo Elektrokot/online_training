@@ -168,7 +168,7 @@ online_training/
 
 ### Подписки
 
-- `POST /subscription/` – подписаться или отписаться от курса
+- `POST courses/<int:course_id>/subscription/subscription/` – подписаться или отписаться от курса
 
 ---
 
@@ -231,7 +231,7 @@ online_training/
 ### Управление подпиской
 
 - Method: `POST`
-- URL: `http://127.0.0.1:8000/subscription/`
+- URL: `http://127.0.0.1:8000/courses/<int:course_id>/subscription/`
 - Headers: `Authorization: Bearer <token>`
 - Body (JSON):
 

@@ -6,7 +6,11 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
-from .serializers import UserPrivateSerializer, UserPublicSerializer
+from .serializers import (
+    UserPrivateSerializer,
+    UserPublicSerializer,
+    UserRegisterSerializer,
+)
 
 
 class UserListAPIView(generics.ListAPIView):
@@ -35,7 +39,7 @@ class UserRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
 
 
 class UserRegisterView(CreateAPIView):
-    serializer_class = UserPrivateSerializer
+    serializer_class = UserRegisterSerializer
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):

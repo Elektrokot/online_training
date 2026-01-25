@@ -201,35 +201,39 @@ class PaginatorTestCase(APITestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            email='user@example.com',
-            password='password123',
-            phone='+79001234567',
-            city='Москва'
+            email="user@example.com",
+            password="password123",
+            phone="+79001234567",
+            city="Москва",
         )
-        self.course = Course.objects.create(title='Python Basics', description='...', owner=self.user)
+        self.course = Course.objects.create(
+            title="Python Basics", description="...", owner=self.user
+        )
         for i in range(12):
             Lesson.objects.create(
-                title=f'Lesson {i}',
-                description='...',
-                video_url='https://youtube.com/watch?v=test',
+                title=f"Lesson {i}",
+                description="...",
+                video_url="https://youtube.com/watch?v=test",
                 course=self.course,
-                owner=self.user
+                owner=self.user,
             )
 
     def test_lesson_pagination(self):
-        """ Тестирование пагинации уроков """
+        """Тестирование пагинации уроков"""
         self.client.force_authenticate(user=self.user)
-        response = self.client.get('/lessons/?page_size=10')
+        response = self.client.get("/lessons/?page_size=10")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()['results']), 10)  # 10 уроков на странице
-        self.assertIn('next', response.json())  # Следующая страница должна быть
+        self.assertEqual(len(response.json()["results"]), 10)  # 10 уроков на странице
+        self.assertIn("next", response.json())  # Следующая страница должна быть
 
     def test_course_pagination(self):
-        """ Тестирование пагинации курсов """
+        """Тестирование пагинации курсов"""
         for i in range(6):
-            Course.objects.create(title=f'Test Course {i}', description='...', owner=self.user)
+            Course.objects.create(
+                title=f"Test Course {i}", description="...", owner=self.user
+            )
         self.client.force_authenticate(user=self.user)
-        response = self.client.get('/courses/?page_size=5')
+        response = self.client.get("/courses/?page_size=5")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()['results']), 5)  # 5 курсов на странице
-        self.assertIn('next', response.json())  # Следующая страница должна быть
+        self.assertEqual(len(response.json()["results"]), 5)  # 5 курсов на странице
+        self.assertIn("next", response.json())  # Следующая страница должна быть
