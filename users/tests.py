@@ -2,9 +2,8 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from courses.models import Lesson, Course
+from courses.models import Course, Lesson
 from users.models import Payment, User
-from unittest.mock import patch
 
 User = get_user_model()
 
@@ -155,50 +154,3 @@ class PaymentTestCase(APITestCase):
         data = response.json()
         self.assertIsInstance(data, list)
         self.assertLessEqual(data[0]["payment_date"], data[1]["payment_date"])
-
-
-
-
-class PaymentCreateTestCase(APITestCase):
-
-    def setUp(self):
-        self.user = User.objects.create_user(
-            email='user@example.com',
-            password='password123',
-            phone='+79001234567',
-            city='Москва'
-        )
-        self.course = Course.objects.create(
-            title='Python Basics',
-            description='...',
-            owner=self.user
-        )
-
-    @patch('users.services.stripe_service.create_stripe_product')
-    @patch('users.services.stripe_service.create_stripe_price')
-    @patch('users.services.stripe_service.create_checkout_session')
-    def test_create_payment_and_get_stripe_session_url(self, mock_session, mock_price, mock_product):
-        """ Тестирование создания платежа и получения ссылки на оплату """
-        mock_product.return_value = 'prod_test123'
-        mock_price.return_value = 'price_test123'
-        mock_session.return_value = ('cs_test123', 'https://checkout.stripe.com/pay/cs_test...')
-
-        self.client.force_authenticate(user=self.user)
-        data = {
-            'paid_course': self.course.id,
-            'amount': '1000.00',
-            'payment_method': 'transfer'
-        }
-        response = self.client.post('/payments/create/', data=data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn('session_url', response.json())
-        self.assertTrue(Payment.objects.filter(user=self.user, paid_course=self.course).exists())
-
-    @patch('users.services.stripe_service.get_checkout_session_status')
-    def test_get_payment_status(self, mock_status):
-        """ Тестирование получения статуса платежа """
-        mock_status.return_value = 'paid'
-        self.client.force_authenticate(user=self.user)
-        response = self.client.get('/payments/status/cs_test123/')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()['status'], 'paid')

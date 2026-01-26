@@ -11,7 +11,7 @@ def create_stripe_product(name):
 
 def create_stripe_price(product_id, amount_in_cents):
     price = stripe.Price.create(
-        product=product_id, unit_amount=amount_in_cents, currency="usd"
+        product=product_id, unit_amount=amount_in_cents, currency="rub"
     )
     return price.id
 

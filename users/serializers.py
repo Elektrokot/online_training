@@ -13,7 +13,7 @@ class PaymentSerializer(serializers.ModelSerializer):
 class PaymentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
-        fields = ('paid_course', 'paid_lesson', 'amount', 'payment_method')
+        fields = ("paid_course", "paid_lesson", "amount", "payment_method")
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):

@@ -9,16 +9,15 @@ from rest_framework.views import APIView
 
 from users.models import Payment
 from users.serializers import PaymentCreateSerializer
-from .services.stripe_service import (
-    create_stripe_product,
-    create_stripe_price,
-    create_checkout_session,
-)
-from .services.stripe_service import get_checkout_session_status
+
 from .models import Course, Lesson, Subscription
 from .paginators import CoursePagination, LessonPagination
 from .permissions import IsModeratorOrReadOnly, IsOwner
 from .serializers import CourseSerializer, LessonSerializer, PaymentSerializer
+from .services.stripe_service import (create_checkout_session,
+                                      create_stripe_price,
+                                      create_stripe_product,
+                                      get_checkout_session_status)
 
 
 @extend_schema(
@@ -31,7 +30,8 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.groups.filter(name="Модераторы").exists():
+
+        if user.is_moderator:
             return Course.objects.all()
         return Course.objects.filter(owner=user)
 
@@ -67,7 +67,8 @@ class LessonListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.groups.filter(name="Модераторы").exists():
+
+        if user.is_moderator:
             return Lesson.objects.all()
         return Lesson.objects.filter(owner=user)
 
@@ -123,7 +124,7 @@ class PaymentCreateView(generics.CreateAPIView):
             else payment.paid_lesson.title
         )
 
-        # Создаём цену в Stripe (умножаем на 100, т.к. в центах)
+        # Создаём цену в Stripe (умножаем на 100, т.к. в копейках)
         price_id = create_stripe_price(product_id, int(payment.amount * 100))
 
         # Создаём сессию оплаты
@@ -145,7 +146,9 @@ class PaymentCreateView(generics.CreateAPIView):
         payment = serializer.instance
 
         # Возвращаем только session_url
-        return Response({'session_url': payment.stripe_session_url}, status=status.HTTP_201_CREATED)
+        return Response(
+            {"session_url": payment.stripe_session_url}, status=status.HTTP_201_CREATED
+        )
 
 
 @extend_schema(
@@ -156,12 +159,16 @@ class PaymentStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, session_id):
-        payment = Payment.objects.filter(stripe_session_id=session_id, user=request.user).first()
+        payment = Payment.objects.filter(
+            stripe_session_id=session_id, user=request.user
+        ).first()
         if not payment:
-            return Response({'error': 'Payment not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Payment not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         status_result = get_checkout_session_status(session_id)
-        return Response({'status': status_result}, status=status.HTTP_200_OK)
+        return Response({"status": status_result}, status=status.HTTP_200_OK)
 
 
 @extend_schema(

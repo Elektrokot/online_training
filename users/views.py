@@ -7,11 +7,8 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
-from .serializers import (
-    UserPrivateSerializer,
-    UserPublicSerializer,
-    UserRegisterSerializer,
-)
+from .serializers import (UserPrivateSerializer, UserPublicSerializer,
+                          UserRegisterSerializer)
 
 
 @extend_schema(description="API для просмотра списка пользователей.", tags=["Users"])
