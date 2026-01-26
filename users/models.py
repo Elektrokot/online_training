@@ -1,3 +1,5 @@
+from decimal import Decimal
+from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
@@ -49,6 +51,10 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
+    @property
+    def is_moderator(self):
+        return self.groups.filter(name=settings.MODERATOR_GROUP_NAME).exists()
+
     class Meta:
         verbose_name = "Ученик"
         verbose_name_plural = "Ученики"
@@ -88,11 +94,15 @@ class Payment(models.Model):
         max_digits=10,
         decimal_places=2,
         verbose_name="Сумма оплаты",
-        validators=[MinValueValidator(0.01)],
+        validators=[MinValueValidator(Decimal("0.01"))],
     )
     payment_method = models.CharField(
         max_length=10, choices=PAYMENT_METHOD_CHOICES, verbose_name="Способ оплаты"
     )
+
+    stripe_session_id = models.CharField(blank=True, null=True)
+    stripe_session_url = models.URLField(max_length=500, blank=True, null=True)
+    stripe_status = models.CharField(blank=True, null=True)
 
     def __str__(self):
         return (

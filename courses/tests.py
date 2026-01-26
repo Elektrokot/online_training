@@ -2,9 +2,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from rest_framework import status
 from rest_framework.test import APITestCase
-
+from unittest.mock import patch
 from courses.models import Course, Lesson, Subscription
-from users.models import User
+from users.models import User, Payment
 
 User = get_user_model()
 
@@ -176,8 +176,7 @@ class SubscriptionTestCase(APITestCase):
     def test_subscribe_to_course(self):
         """Тестирование подписки на курс"""
         self.client.force_authenticate(user=self.user)
-        data = {"course_id": self.course.id}
-        response = self.client.post("/subscription/", data=data)
+        response = self.client.post(f"/courses/{self.course.id}/subscription/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["message"], "Подписка добавлена")
         self.assertTrue(
@@ -188,8 +187,7 @@ class SubscriptionTestCase(APITestCase):
         """Тестирование отписки от курса"""
         Subscription.objects.create(user=self.user, course=self.course)
         self.client.force_authenticate(user=self.user)
-        data = {"course_id": self.course.id}
-        response = self.client.post("/subscription/", data=data)
+        response = self.client.post(f"/courses/{self.course.id}/subscription/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["message"], "Подписка удалена")
         self.assertFalse(
@@ -237,3 +235,65 @@ class PaginatorTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()["results"]), 5)  # 5 курсов на странице
         self.assertIn("next", response.json())  # Следующая страница должна быть
+
+
+class PaymentCreateTestCase(APITestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="user@example.com",
+            password="password123",
+            phone="+79001234567",
+            city="Москва",
+        )
+        self.course = Course.objects.create(
+            title="Python Basics", description="...", owner=self.user
+        )
+
+    @patch("courses.views.create_stripe_product")
+    @patch("courses.views.create_stripe_price")
+    @patch("courses.views.create_checkout_session")
+    def test_create_payment_and_get_stripe_session_url(
+        self, mock_session, mock_price, mock_product
+    ):
+        """Тестирование создания платежа и получения ссылки на оплату"""
+        mock_product.return_value = "prod_test123"
+        mock_price.return_value = "price_test123"
+        mock_session.return_value = (
+            "cs_test123",
+            "https://checkout.stripe.com/pay/cs_test...",
+        )
+
+        self.client.force_authenticate(user=self.user)
+        data = {
+            "paid_course": self.course.id,
+            "amount": "1000.00",
+            "payment_method": "transfer",
+        }
+        response = self.client.post("/payments/create/", data=data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("session_url", response.json())
+        self.assertTrue(
+            Payment.objects.filter(user=self.user, paid_course=self.course).exists()
+        )
+
+    @patch("courses.views.get_checkout_session_status")
+    def test_get_payment_status(self, mock_status):
+        """Тестирование получения статуса платежа"""
+        mock_status.return_value = "paid"
+
+        from users.models import Payment
+        Payment.objects.create(
+            user=self.user,
+            paid_course=self.course,
+            amount="100.00",
+            payment_method="transfer",
+            stripe_session_id="cs_test123",
+            stripe_session_url="https://checkout.stripe.com/pay/cs_test...",
+            stripe_status="paid"
+        )
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get("/payments/status/cs_test123/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["status"], "paid")

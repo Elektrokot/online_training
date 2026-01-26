@@ -14,6 +14,7 @@
 - Подписываться и отписываться от обновлений курсов.
 - Валидация ссылок на видео: разрешены только ссылки на YouTube.
 - Пагинация для списков курсов и уроков.
+- Подключение оплаты через Stripe.
 - Тестирование функционала с покрытием.
 
 ---
@@ -23,18 +24,20 @@
 ```
 online_training/
 ├── .venv/                     # Виртуальное окружение
-├── config/                   # Основной модуль Django-проекта
-│   ├── __init__.py       
-│   ├── asgi.py          
-│   ├── settings.py   
+├── config/                    # Основной модуль Django-проекта
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings.py
 │   ├── urls.py               # Основной URL-маршрутизатор
-│   └── wsgi.py   
+│   └── wsgi.py
 ├── courses/                   # Приложение для курсов и уроков
 │   ├── management/            # Кастомные команды
 │   │   └── commands/
 │   │       └── create_moderator_group.py
 │   ├── migrations/            # Миграции
 │   ├── __init__.py
+│   ├── services/              # Сервисы для работы с внешними API (Stripe)
+│   │   └── strip_service.py
 │   ├── admin.py
 │   ├── apps.py
 │   ├── models.py              # Модели Course, Lesson, Subscription
@@ -65,7 +68,6 @@ online_training/
 ├── .gitignore                 # Исключения для git
 ├── manage.py
 ├── poetry.lock
-├── ppoetry.toml               
 ├── pyproject.toml             # Зависимости и настройки Poetry
 └── README.md                  # Этот файл
 ```
@@ -158,6 +160,8 @@ online_training/
 ### Платежи
 
 - `GET /payments/` – получить список платежей
+- `POST /payments/create/` – создать платеж и получить ссылку на оплату через Stripe
+- `GET /payments/status/{session_id}/` – получить статус платежа по ID сессии Stripe
 - Параметры фильтрации:
   - `paid_course` – фильтр по курсу
   - `paid_lesson` – фильтр по уроку
@@ -227,6 +231,44 @@ online_training/
 
 - Method: `GET`
 - URL: `http://127.0.0.1:8000/payments/?paid_course=1&ordering=-payment_date`
+
+### Создание платежа и получение ссылки на оплату
+
+- Method: `POST`
+- URL: `http://127.0.0.1:8000/payments/create/`
+- Headers: `Authorization: Bearer <token>`
+- Body (JSON):
+
+```json
+{
+  "paid_course": 1,
+  "paid_lesson": 1,
+  "amount": "1000",
+  "payment_method": "transfer"
+}
+```
+
+- Ответ:
+
+```json
+{
+  "session_url": "https://checkout.stripe.com/c/pay/cs_test_..."
+}
+```
+
+### Проверка статуса платежа
+
+- Method: `GET`
+- URL: `http://127.0.0.1:8000/payments/status/cs_test_a160i7BrbhkklpR3VarKnq1PGYTRlsmJP5SE6ZmyeCOY7yNKmxqbpKfvHI/`
+- Headers: `Authorization: Bearer <token>`
+
+- Ответ:
+
+```json
+{
+  "status": "paid"
+}
+```
 
 ### Управление подпиской
 
