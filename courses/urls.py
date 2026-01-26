@@ -30,5 +30,9 @@ urlpatterns = [
         "lessons/delete/<int:pk>/", LessonDestroyAPIView.as_view(), name="lesson-delete"
     ),
     path("payments/", PaymentListView.as_view(), name="payment-list"),
-    path("courses/<int:course_id>/subscription/", SubscriptionToggleView.as_view(), name="subscription"),
+    path(
+        "courses/<int:course_id>/subscription/",
+        SubscriptionToggleView.as_view(),
+        name="subscription",
+    ),
 ]

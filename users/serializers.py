@@ -10,6 +10,12 @@ class PaymentSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class PaymentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ('paid_course', 'paid_lesson', 'amount', 'payment_method')
+
+
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
