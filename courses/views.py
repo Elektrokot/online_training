@@ -6,7 +6,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from django.db import transaction
 from users.models import Payment
 from users.serializers import PaymentCreateSerializer
 
@@ -114,36 +114,33 @@ class PaymentCreateView(generics.CreateAPIView):
     serializer_class = PaymentCreateSerializer
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        payment = serializer.save(user=self.request.user)
-
-        # Создаём продукт в Stripe
-        product_id = create_stripe_product(
-            payment.paid_course.title
-            if payment.paid_course
-            else payment.paid_lesson.title
-        )
-
-        # Создаём цену в Stripe (умножаем на 100, т.к. в копейках)
-        price_id = create_stripe_price(product_id, int(payment.amount * 100))
-
-        # Создаём сессию оплаты
-        session_id, session_url = create_checkout_session(
-            price_id,
-            success_url="http://127.0.0.1:8000/payment-success/",
-            cancel_url="http://127.0.0.1:8000/payment-cancel/",
-        )
-
-        # Сохраняем данные сессии в модель
-        payment.stripe_session_id = session_id
-        payment.stripe_session_url = session_url
-        payment.save()
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        payment = serializer.instance
+
+        with transaction.atomic():
+            payment = serializer.save(user=self.request.user)
+
+            # Создаём продукт в Stripe
+            product_id = create_stripe_product(
+                payment.paid_course.title if payment.paid_course else payment.paid_lesson.title
+            )
+
+            # Создаём цену в Stripe (умножаем на 100, т.к. в копейках)
+            price_id = create_stripe_price(product_id, int(payment.amount * 100))
+
+            # Создаём сессию оплаты
+            session_id, session_url = create_checkout_session(
+                price_id,
+                success_url="http://127.0.0.1:8000/payment-success/",
+                cancel_url="http://127.0.0.1:8000/payment-cancel/",
+            )
+
+            # Сохраняем данные сессии в модель
+            payment.stripe_session_id = session_id
+            payment.stripe_session_url = session_url
+            payment.save()
 
         # Возвращаем только session_url
         return Response(
