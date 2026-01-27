@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "django_filters",
     "rest_framework_simplejwt",
     "drf_spectacular",
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -142,3 +143,20 @@ SPECTACULAR_SETTINGS = {
 MODERATOR_GROUP_NAME = "Модераторы"
 
 STRIPE_API_KEY = env("STRIPE_API_KEY")
+
+# URL-адрес брокера сообщений
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')# Например, Redis, который по умолчанию работает на порту 6379
+
+# URL-адрес брокера результатов, также Redis
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND')
+
+# Часовой пояс для работы Celery
+CELERY_TIMEZONE = "Australia/Tasmania"
+
+# Флаг отслеживания выполнения задач
+CELERY_TASK_TRACK_STARTED = True
+
+# Максимальное время на выполнение задачи
+CELERY_TASK_TIME_LIMIT = 30 * 60
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
