@@ -17,8 +17,19 @@ class UserAdmin(BaseUserAdmin):
     search_fields = ("email", "phone", "city")
     ordering = ("email",)
 
-    fieldsets = BaseUserAdmin.fieldsets
-    add_fieldsets = BaseUserAdmin.add_fieldsets
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        ('Personal info', {'fields': ('phone', 'city', 'avatar')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'password1', 'password2', 'phone', 'city', 'avatar', 'is_active', 'is_staff',
+                       'is_superuser'),
+        }),
+    )
 
 
 @admin.register(Payment)
