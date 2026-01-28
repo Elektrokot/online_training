@@ -1,3 +1,6 @@
+from datetime import timedelta
+from django.db import transaction
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status, viewsets
@@ -6,10 +9,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.db import transaction
 from users.models import Payment
 from users.serializers import PaymentCreateSerializer
-
 from .models import Course, Lesson, Subscription
 from .paginators import CoursePagination, LessonPagination
 from .permissions import IsModeratorOrReadOnly, IsOwner
@@ -18,6 +19,7 @@ from .services.stripe_service import (create_checkout_session,
                                       create_stripe_price,
                                       create_stripe_product,
                                       get_checkout_session_status)
+from .tasks import send_course_update_email
 
 
 @extend_schema(
@@ -49,6 +51,10 @@ class CourseViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    def perform_update(self, serializer):
+        course = serializer.save()
+        # Отправляем асинхронное уведомление
+        send_course_update_email.delay(course.id)
 
 @extend_schema(description="API для создания урока.", tags=["Lessons"])
 class LessonCreateAPIView(generics.CreateAPIView):
