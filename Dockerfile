@@ -1,5 +1,5 @@
 # Указываем базовый образ
-FROM python:3.13
+FROM python:3.13-alpine
 
 # предотвращает создание .pyc файлов
 ENV PYTHONDONTWRITEBYTECODE=1

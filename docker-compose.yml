@@ -3,34 +3,36 @@ version: '3.9'
 services:
   db:
     image: postgres:16.0
+    env_file:
+      - .env
     environment:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=db
       - DB_PORT=${DB_PORT}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg-isready -U postgres"]
+      test: ["CMD-SHELL", "pg-isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 10s
       retries: 3
 
   redis:
     image: redis
-    env_file:
-      - .env
-    environment:
-      - CACHE_ENABLED=${CACHE_ENABLED}
-      - REDIS_URL=${REDIS_URL}
+    ports:
+      - "6379:6379"
+
 
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: python manage.py migrate && python manage.py runserver 0.0.0.0:8000
+    env_file:
+      - .env
     environment:
       - DEBUG=${DEBUG}
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=db
       - SECRET_KEY=${SECRET_KEY}
     volumes:
       - .:/code
@@ -44,6 +46,8 @@ services:
   celery_worker:
     build: .
     command: celery -A config worker --loglevel=info
+    env_file:
+      - .env
     environment:
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
@@ -57,10 +61,12 @@ services:
   celery_beat:
     build: .
     command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file:
+      - .env
     environment:
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=db
     depends_on:
       - db
       - redis
