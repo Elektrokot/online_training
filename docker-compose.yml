@@ -1,72 +1,50 @@
-version: '3.9'
-
 services:
+
   db:
-    image: postgres:16.0
+    image: postgres:16.0-alpine3.18
     env_file:
       - .env
     environment:
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=db
-      - DB_PORT=${DB_PORT}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg-isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 10s
       retries: 3
+    restart: unless-stopped
 
   redis:
-    image: redis
-    ports:
-      - "6379:6379"
-
+    image: redis:8.6-rc1-alpine3.23
+    restart: unless-stopped
 
   web:
     build: .
-    command: python manage.py migrate && python manage.py runserver 0.0.0.0:8000
+    command: /bin/bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     env_file:
       - .env
     environment:
-      - DEBUG=${DEBUG}
-      - DB_HOST=db
-      - SECRET_KEY=${SECRET_KEY}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - .:/code
       - static_volume:/code/static
     ports:
       - "8000:8000"
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+    restart: unless-stopped
 
   celery_worker:
     build: .
     command: celery -A config worker --loglevel=info
     env_file:
       - .env
-    environment:
-      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
-      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
-    depends_on:
-      - db
-      - redis
-    volumes:
-      - .:/code
-      - static_volume:/code/media
-
-  celery_beat:
-    build: .
-    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
-    env_file:
-      - .env
-    environment:
-      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
-      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
-      - DB_HOST=db
     depends_on:
       - db
       - redis
@@ -74,6 +52,21 @@ services:
     volumes:
       - .:/code
       - static_volume:/code/media
+    restart: unless-stopped
+
+  celery_beat:
+    build: .
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+      - web
+    volumes:
+      - .:/code
+      - static_volume:/code/media
+    restart: unless-stopped
 
 networks:
   default:
