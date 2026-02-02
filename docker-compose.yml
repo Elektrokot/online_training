@@ -48,7 +48,6 @@ services:
     depends_on:
       - db
       - redis
-      - web
     volumes:
       - .:/code
       - static_volume:/code/media
@@ -62,7 +61,6 @@ services:
     depends_on:
       - db
       - redis
-      - web
     volumes:
       - .:/code
       - static_volume:/code/media
