@@ -15,3 +15,11 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 app.conf.beat_scheduler = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# Конфигурация периодических задач
+app.conf.beat_schedule = {
+    'deactivate-inactive-users': {
+        'task': 'users.tasks.deactivate_inactive_users',
+        'schedule': 24 * 60 * 60,  # раз в сутки
+    },
+}
