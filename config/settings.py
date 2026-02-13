@@ -8,7 +8,7 @@ env.read_env()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = env("DJANGO_SECRET_KEY")
+SECRET_KEY = env("DJANGO_SECRET_KEY", "django-insecure-fallback-key")
 
 DEBUG = env.bool("DEBUG", False)
 
