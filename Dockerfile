@@ -1,12 +1,6 @@
 # Указываем базовый образ
 FROM python:3.12-slim
 
-# предотвращает создание .pyc файлов
-ENV PYTHONDONTWRITEBYTECODE=1
-
-# отключает буферизацию stdout и stderr потоков
-ENV PYTHONUNBUFFERED=1
-
 # Устанавливаем рабочую директорию в контейнере
 WORKDIR /app
 
