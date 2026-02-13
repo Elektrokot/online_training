@@ -1,18 +1,17 @@
 import os
 from datetime import timedelta
 from pathlib import Path
-
 from environs import env
 
 env.read_env()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = env("SECRET_KEY")
+SECRET_KEY = env("DJANGO_SECRET_KEY", "fallback-secret-key-if-not-set")
 
-DEBUG = env.bool("DEBUG", False)
+DEBUG = env("DEBUG", False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -26,6 +25,8 @@ INSTALLED_APPS = [
     "courses",
     "django_filters",
     "rest_framework_simplejwt",
+    "drf_spectacular",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -59,12 +60,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": env("DB_NAME"),
-        "USER": env("DB_USER"),
-        "PASSWORD": env.int("DB_PASSWORD"),
-        "HOST": env("DB_HOST"),
-        "PORT": env.int("DB_PORT"),
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("DB_NAME", "testdb"),
+        "USER": env("DB_USER", "postgres"),
+        "PASSWORD": env("DB_PASSWORD", "postgres"),
+        "HOST": env("DB_HOST", "localhost"),
+        "PORT": env("DB_PORT", "5432"),
     }
 }
 
@@ -85,7 +86,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Moscow"
 
 USE_I18N = True
 USE_L18N = True
@@ -96,7 +97,7 @@ STATIC_URL = "static/"
 
 AUTH_USER_MODEL = "users.User"
 
-CACHE_ENABLED = env.bool(
+CACHE_ENABLED = env(
     "CACHE_ENABLED",
     False,
 )
@@ -104,7 +105,7 @@ if CACHE_ENABLED:
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.redis.RedisCache",
-            "LOCATION": env("REDIS_URL"),
+            "LOCATION": env("REDIS_URL", "redis://redis:6379/1"),
         }
     }
 
@@ -122,6 +123,7 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # Настройки срока действия токенов
@@ -129,3 +131,39 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Online Training Platform API",
+    "DESCRIPTION": "API documentation for the Online Training Platform",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
+
+MODERATOR_GROUP_NAME = "Модераторы"
+
+STRIPE_API_KEY = env("STRIPE_API_KEY", "fallback-secret-key-if-not-set")
+
+# URL-адрес брокера сообщений
+CELERY_BROKER_URL = env(
+    "CELERY_BROKER_URL", "redis://redis:6379/0"
+)  # Например, Redis, который по умолчанию работает на порту 6379
+
+# URL-адрес брокера результатов, также Redis
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", "redis://redis:6379/0")
+
+# Часовой пояс для работы Celery
+CELERY_TIMEZONE = TIME_ZONE
+
+# Флаг отслеживания выполнения задач
+CELERY_TASK_TRACK_STARTED = True
+
+# Максимальное время на выполнение задачи
+CELERY_TASK_TIME_LIMIT = 30 * 60
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

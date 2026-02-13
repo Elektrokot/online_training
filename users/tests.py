@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from courses.models import Lesson, Course
+from courses.models import Course, Lesson
 from users.models import Payment
 
 User = get_user_model()
@@ -137,13 +137,13 @@ class PaymentTestCase(APITestCase):
     def test_order_payments_by_date(self):
         """Тестирование сортировки платежей по дате"""
         self.client.force_authenticate(user=self.user)
-        p1 = Payment.objects.create(
+        Payment.objects.create(
             user=self.user,
             paid_course=self.course,
             amount=1000.00,
             payment_method="transfer",
         )
-        p2 = Payment.objects.create(
+        Payment.objects.create(
             user=self.user,
             paid_lesson=self.lesson,
             amount=500.00,

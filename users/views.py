@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.generics import CreateAPIView, get_object_or_404
 from rest_framework.permissions import AllowAny, IsAdminUser
@@ -13,11 +14,15 @@ from .serializers import (
 )
 
 
+@extend_schema(description="API для просмотра списка пользователей.", tags=["Users"])
 class UserListAPIView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserPublicSerializer
 
 
+@extend_schema(
+    description="API для просмотра и обновления профиля пользователя.", tags=["Users"]
+)
 class UserRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserPublicSerializer
@@ -38,6 +43,16 @@ class UserRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
         return super().check_object_permissions(request, obj)
 
 
+@extend_schema(
+    description="API для регистрации нового пользователя.",
+    tags=["Auth"],
+    responses={
+        201: {
+            "type": "object",
+            "properties": {"refresh": {"type": "string"}, "access": {"type": "string"}},
+        }
+    },
+)
 class UserRegisterView(CreateAPIView):
     serializer_class = UserRegisterSerializer
     permission_classes = [AllowAny]
@@ -56,6 +71,11 @@ class UserRegisterView(CreateAPIView):
         )
 
 
+@extend_schema(
+    description="API для удаления пользователя. Доступно только администратору.",
+    tags=["Users"],
+    responses={204: None},
+)
 class UserDeleteView(APIView):  # Класс удаления пользователя доступен только админу
     permission_classes = [IsAdminUser]
 

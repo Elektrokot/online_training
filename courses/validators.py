@@ -1,4 +1,5 @@
 from urllib.parse import urlparse
+
 from rest_framework.serializers import ValidationError
 
 

@@ -16,6 +16,8 @@ class Course(models.Model):
         related_name="courses",
         verbose_name="Владелец курса",
     )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
     def __str__(self):
         return self.title
@@ -49,6 +51,14 @@ class Lesson(models.Model):
         related_name="lessons",
         verbose_name="Владелец урока",
     )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    def save(self, *args, **kwargs):
+        # При обновлении урока — обновляем время у курса
+        super().save(*args, **kwargs)
+        self.course.updated_at = self.updated_at
+        self.course.save(update_fields=["updated_at"])
 
     def __str__(self):
         return f"{self.course.title} - {self.title}"
