@@ -33,8 +33,8 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     volumes:
-      - .:/code
-      - static_volume:/code/static
+      - .:/app
+      - static_volume:/app/static
     ports:
       - "8000:8000"
     depends_on:
@@ -51,8 +51,8 @@ services:
       - db
       - redis
     volumes:
-      - .:/code
-      - static_volume:/code/media
+      - .:/app
+      - static_volume:/app/media
     restart: unless-stopped
 
   celery_beat:
@@ -64,8 +64,8 @@ services:
       - db
       - redis
     volumes:
-      - .:/code
-      - static_volume:/code/media
+      - .:/app
+      - static_volume:/app/media
     restart: unless-stopped
 
   nginx:
