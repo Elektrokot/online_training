@@ -50,9 +50,9 @@ services:
     depends_on:
       - db
       - redis
-#    volumes:
+    volumes:
 #      - .:/app
-#      - static_volume:/app/media
+      - static_volume:/app/media
     restart: unless-stopped
 
   celery_beat:
@@ -63,9 +63,9 @@ services:
     depends_on:
       - db
       - redis
-#    volumes:
+    volumes:
 #      - .:/app
-#      - static_volume:/app/media
+      - static_volume:/app/media
     restart: unless-stopped
 
   nginx:
