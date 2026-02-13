@@ -21,13 +21,11 @@ services:
     image: redis:8.6-rc1-alpine3.23
     volumes:
       - redis_volume:/data
-    env_file:
-      - ./.env
     restart: unless-stopped
 
   web:
     build: .
-    command: sh -c "python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000"
     env_file:
       - .env
     environment:
