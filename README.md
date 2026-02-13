@@ -92,13 +92,13 @@ online_training/
 
 1. Клонируйте репозиторий:
     ```bash
-    git clone https://github.com/Elektrokot/LibraryProjectDjango.git
-    cd LibraryProjectDjango
+    git clone https://github.com/Elektrokot/online_training.git
+    cd online_training
     ```
 
 2. Создайте `.env` на основе `.env.example`:
     ```bash
-    cp .env.example .env
+    cp .env.sample .env
     ```
 
 3. Установите зависимости:
