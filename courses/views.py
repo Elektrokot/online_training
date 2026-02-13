@@ -1,6 +1,4 @@
-from datetime import timedelta
 from django.db import transaction
-from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status, viewsets
@@ -9,16 +7,20 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from users.models import Payment
 from users.serializers import PaymentCreateSerializer
+
 from .models import Course, Lesson, Subscription
 from .paginators import CoursePagination, LessonPagination
 from .permissions import IsModeratorOrReadOnly, IsOwner
 from .serializers import CourseSerializer, LessonSerializer, PaymentSerializer
-from .services.stripe_service import (create_checkout_session,
-                                      create_stripe_price,
-                                      create_stripe_product,
-                                      get_checkout_session_status)
+from .services.stripe_service import (
+    create_checkout_session,
+    create_stripe_price,
+    create_stripe_product,
+    get_checkout_session_status,
+)
 from .tasks import send_course_update_email
 
 
@@ -55,6 +57,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         course = serializer.save()
         # Отправляем асинхронное уведомление
         send_course_update_email.delay(course.id)
+
 
 @extend_schema(description="API для создания урока.", tags=["Lessons"])
 class LessonCreateAPIView(generics.CreateAPIView):
@@ -120,7 +123,6 @@ class PaymentCreateView(generics.CreateAPIView):
     serializer_class = PaymentCreateSerializer
     permission_classes = [IsAuthenticated]
 
-
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -130,7 +132,9 @@ class PaymentCreateView(generics.CreateAPIView):
 
             # Создаём продукт в Stripe
             product_id = create_stripe_product(
-                payment.paid_course.title if payment.paid_course else payment.paid_lesson.title
+                payment.paid_course.title
+                if payment.paid_course
+                else payment.paid_lesson.title
             )
 
             # Создаём цену в Stripe (умножаем на 100, т.к. в копейках)

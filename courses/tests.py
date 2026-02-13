@@ -1,10 +1,12 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from rest_framework import status
 from rest_framework.test import APITestCase
-from unittest.mock import patch
+
 from courses.models import Course, Lesson, Subscription
-from users.models import User, Payment
+from users.models import Payment
 
 User = get_user_model()
 
@@ -283,6 +285,7 @@ class PaymentCreateTestCase(APITestCase):
         mock_status.return_value = "paid"
 
         from users.models import Payment
+
         Payment.objects.create(
             user=self.user,
             paid_course=self.course,
@@ -290,7 +293,7 @@ class PaymentCreateTestCase(APITestCase):
             payment_method="transfer",
             stripe_session_id="cs_test123",
             stripe_session_url="https://checkout.stripe.com/pay/cs_test...",
-            stripe_status="paid"
+            stripe_status="paid",
         )
 
         self.client.force_authenticate(user=self.user)

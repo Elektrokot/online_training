@@ -58,7 +58,7 @@ class Lesson(models.Model):
         # При обновлении урока — обновляем время у курса
         super().save(*args, **kwargs)
         self.course.updated_at = self.updated_at
-        self.course.save(update_fields=['updated_at'])
+        self.course.save(update_fields=["updated_at"])
 
     def __str__(self):
         return f"{self.course.title} - {self.title}"

@@ -1,10 +1,12 @@
-from celery import shared_task
-from django.core.mail import send_mail
-from django.conf import settings
-from django.utils import timezone
-from datetime import timedelta
-from .models import Course, Subscription
 import logging
+from datetime import timedelta
+
+from celery import shared_task
+from django.conf import settings
+from django.core.mail import send_mail
+from django.utils import timezone
+
+from .models import Course, Subscription
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +20,17 @@ def send_course_update_email(course_id):
 
     # Проверка: обновлялся ли курс менее 4 часов назад
     if course.updated_at and course.updated_at > timezone.now() - timedelta(hours=4):
-        logger.info(f"Курс {course_id} был обновлён менее 4х часов назад. Уведомления не будет.")
-        print(f"Курс {course_id} был обновлён менее 4х часов назад. Уведомления не будет.") # Только для отладки
+        logger.info(
+            f"Курс {course_id} был обновлён менее 4х часов назад. Уведомления не будет."
+        )
+        print(
+            f"Курс {course_id} был обновлён менее 4х часов назад. Уведомления не будет."
+        )  # Только для отладки
         return
 
-    subscribers = Subscription.objects.filter(course=course, is_active=True).select_related('user')
+    subscribers = Subscription.objects.filter(
+        course=course, is_active=True
+    ).select_related("user")
 
     for sub in subscribers:
         user = sub.user
