@@ -12,7 +12,6 @@ django = "^5.1"
 djangorestframework = "^3.16.1"
 pillow = "^12.1.0"
 psycopg = "^3.3.2"
-environs = "^14.5.0"
 django-filter = "^25.2"
 djangorestframework-simplejwt = "^5.5.1"
 stripe = "^14.2.0"
@@ -25,6 +24,7 @@ requests = "^2.32.5"
 django-celery-beat = "^2.8.1"
 poetry-core = "^2.3.0"
 gunicorn = "^25.0.3"
+python-dotenv = "^1.2.1"
 
 
 [tool.poetry.group.dev.dependencies]
