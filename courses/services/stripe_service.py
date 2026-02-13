@@ -19,7 +19,9 @@ def create_stripe_price(product_id: str, amount_in_kop: int) -> str:
     return price.id
 
 
-def create_checkout_session(price_id: str, success_url: str, cancel_url: str) -> Tuple[str, str]:
+def create_checkout_session(
+    price_id: str, success_url: str, cancel_url: str
+) -> Tuple[str, str]:
     session = stripe.checkout.Session.create(
         payment_method_types=["card"],
         line_items=[
