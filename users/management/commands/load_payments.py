@@ -55,7 +55,7 @@ class Command(BaseCommand):
             payment_method="transfer",
         )
         if created:
-            self.stdout.write(f"Created payment 1")
+            self.stdout.write("Created payment 1")
 
         payment2, created = Payment.objects.get_or_create(
             user=user,
@@ -66,6 +66,6 @@ class Command(BaseCommand):
             payment_method="cash",
         )
         if created:
-            self.stdout.write(f"Created payment 2")
+            self.stdout.write("Created payment 2")
 
         self.stdout.write(self.style.SUCCESS("Successfully loaded all data"))
