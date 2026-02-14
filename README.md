@@ -96,7 +96,7 @@ online_training/
     cd online_training
     ```
 
-2. Создайте `.env` на основе `.env.example`:
+2. Создайте `.env` на основе `.env.sample`:
     ```bash
     cp .env.sample .env
     ```

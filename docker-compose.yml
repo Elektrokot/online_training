@@ -3,13 +3,13 @@ services:
   db:
     image: postgres:16.0-alpine3.18
     env_file:
-      - .env
+      - ./.env
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data/
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
@@ -26,17 +26,17 @@ services:
   web:
     build: .
     command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+    expose:
+      - "8000"
     env_file:
-      - .env
+      - ./.env
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    volumes:
-      - .:/code
-      - static_volume:/code/static
-    ports:
-      - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -46,26 +46,20 @@ services:
     build: .
     command: celery -A config worker --loglevel=info
     env_file:
-      - .env
+      - ./.env
     depends_on:
       - db
       - redis
-    volumes:
-      - .:/code
-      - static_volume:/code/media
     restart: unless-stopped
 
   celery_beat:
     build: .
     command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     env_file:
-      - .env
+      - ./.env
     depends_on:
       - db
       - redis
-    volumes:
-      - .:/code
-      - static_volume:/code/media
     restart: unless-stopped
 
   nginx:
