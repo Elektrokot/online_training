@@ -25,6 +25,7 @@ django-celery-beat = "^2.8.1"
 poetry-core = "^2.3.0"
 gunicorn = "^25.0.3"
 environs = "^14.5.0"
+djangorestframework-stubs = "^3.16.8"
 
 
 [tool.poetry.group.dev.dependencies]
